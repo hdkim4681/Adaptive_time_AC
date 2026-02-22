@@ -1,0 +1,45 @@
+clear all; close all; rng(23)
+%% Parameters setting
+xl=0; xr=1; yl=0; yr=1; Nx=100; Ny=Nx; h=(xr-xl)/Nx;
+x=linspace(xl-0.5*h,xr+0.5*h,Nx+2);
+y=linspace(yl-0.5*h,yr+0.5*h,Ny+2);
+ep=h; dt=0.01*h^2; tol=2.0e-2; t=0; T=0.25; s=0.99;
+max_dt=ep^2*h^2/(2*h^2+4*ep^2);
+%% Initial condition
+phi0=0.5*(2*rand(Nx+2,Ny+2)-1);
+phi=phi0; nphi=phi;
+figure(333);
+surf(x,y,phi); view(2); shading interp; axis image; axis off; set(gca, 'Position', [0 0 1 1]);
+I=2:Nx+1; J=2:Ny+1;
+it=0; plotb=30; plotc=6240; plotd=15000;
+%% Main loop
+while t<T
+    it=it+1;
+    mu=(phi(I,J).^3-phi(I,J))./ep^2-(phi(I-1,J)+phi(I,J-1)...
+        -4*phi(I,J)+phi(I+1,J)+phi(I,J+1))/h^2;
+    en=max(abs(mu),[],'all');
+    dt=s*min(tol/en,max_dt);
+    tt(it)=dt;
+    if (t+dt>T)
+        dt=T-t;
+    end
+    t=t+dt
+    phi(I,J)=phi(I,J)-dt*mu;
+
+    phi(1,:)=phi(2,:); phi(Nx+2,:)=phi(Nx+1,:);
+    phi(:,1)=phi(:,2); phi(:,Ny+2)=phi(:,Ny+1);
+    % plot1
+    if it==1||it==plotb||it==plotc||it==plotd
+        figure(it); clf; hold on
+        surf(x,y,phi); view(2); shading interp; axis image; axis off; set(gca, 'Position', [0 0 1 1]);
+    end
+end
+% plot2
+figure(2); clf; hold on; box on;
+plot(tt,'-');
+plot(1,tt(1),Marker="o",Color=[1 0 0]);
+plot(plotb,tt(plotb),Marker="o",Color=[1 0 0]);
+plot(plotc,tt(plotc),Marker="o",Color=[1 0 0]);
+plot(plotd,tt(plotd),Marker="o",Color=[1 0 0]);
+text('Interpreter','latex','String','$\Delta t^{n+1}$','Position',[-1500,1.7e-05]);
+text('Interpreter','latex','String','$n$','Position',[14860,-0.75e-6]);
